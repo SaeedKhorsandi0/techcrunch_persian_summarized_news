@@ -1,0 +1,353 @@
+{
+  "name": "TechCrunch Persian summarized news using Ai",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "feedUrl": "https://techcrunch.com/feed/"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        64
+      ],
+      "id": "fa0450f1-965a-4724-bf65-f49dc9983e03",
+      "name": "RSS Feed Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "name": "News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        64
+      ],
+      "id": "42c54673-7bbc-4702-a1ec-973a7fed6aeb"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "Cover",
+              "cssSelector": "img",
+              "returnValue": "attribute",
+              "attribute": "src",
+              "returnArray": true
+            },
+            {
+              "key": "Title",
+              "cssSelector": "h1"
+            },
+            {
+              "key": "Pargraphs",
+              "cssSelector": ".entry-content p",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        64
+      ],
+      "id": "d707603a-edd7-49c4-b75a-f9d05f09c83d",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "-1003773345715",
+        "file": "={{ $('Code in JavaScript').item.json.Cover }}",
+        "additionalFields": {
+          "caption": "=*{{ $json.title }}*\n\n{{ $json.body }}\n🔗 [لینک خبر]({{ $('RSS Feed Trigger').item.json.link }})",
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        64
+      ],
+      "id": "7d2e15e8-1112-49e5-a2d1-3605996dd722",
+      "name": "Send a photo message",
+      "webhookId": "8815907e-3a7c-4d19-86f6-f52da6b31427",
+      "credentials": {
+        "telegramApi": {
+          "id": "A5fP61cDdj7ILPkc",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nfor (const item of $input.all()) {\n  \n  // 1. Return only the third link from the Cover array (index 2)\n  if (item.json.Cover && item.json.Cover.length >= 3) {\n    item.json.Cover = item.json.Cover[2];\n  }\n  \n  // 2. Clean the Paragraphs (handling the \"Pargraphs\" typo from the source data)\n  if (item.json.Pargraphs) {\n    item.json.Pargraphs = item.json.Pargraphs\n      .filter(p => p.trim() !== \"\") // Remove empty strings\n      .map(p => {\n        return p\n          .replace(/<[^>]*>/g, '')                // Removes HTML tags like <p>, <div>, etc.\n          .replace(/\\[https?:\\/\\/[^\\]]+\\]/g, '')  // Removes [https://...] links inside brackets\n          .replace(/\\n/g, ' ')                    // Replaces newlines with spaces\n          .replace(/\\s+/g, ' ')                   // Collapses multiple spaces into one\n          .trim();                                // Removes leading/trailing whitespace\n      });\n  }\n  \n  // 3. Title remains unchanged automatically as we haven't touched item.json.Title\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        64
+      ],
+      "id": "1373fedc-5543-4199-96f0-271640c8d6bb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "model": "moonshotai/kimi-k2-instruct-0905",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        336,
+        192
+      ],
+      "id": "d7a65a70-ad67-43ce-8380-fac6648a916b",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "23JHOHjJraDTlaxE",
+          "name": "Groq account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Title: {{ $json.Title }}\nBody: {{ $json.Pargraphs }}",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=You are a professional technology journalist and expert Persian (Farsi) translator.\n\nYou will receive input containing:\n\nTitle: an English tech news headline\nBody: an array of cleaned paragraph texts from the article\n\nYour task is to produce a professional yet **reader-friendly** Persian tech news post suitable for Telegram.\n\n1. Translate and rewrite the Title into Persian as a clear, journalistic headline.\n   - The headline must:\n     • Be accurate and neutral\n     • Avoid clickbait or speculation\n     • Start with **a single, relevant emoji** that matches the topic (e.g. 🚀 startups, 🤖 AI, 💰 finance, 🔒 security, 📱 mobile, ☁️ cloud)\n     • Appear **alone** at the very top of the output\n\n2. Then, separately, summarize the article body based on the Pargraphs content.\n   For the body:\n   - Extract only core facts (who, what, why it matters, immediate implications)\n   - Ignore filler, background fluff, promotional language, repetition\n   - Present the summary as **3–5 concise bullet points** in Persian\n   - **Each bullet starts with one relevant emoji** (متنوع و مرتبط انتخاب کن، بیش از حد تکراری نباشه)\n   - **Do NOT use • or - or any bullet marker** — فقط ایموجی + فاصله + متن\n   - Bullet points should be short, precise, and scannable (حداکثر ۱–۲ خط هر کدام)\n\n3. **After the bullet points, add one short concluding sentence** (جمع‌بندی) that highlights the main takeaway or significance of the news — حداکثر ۱۵–۲۰ کلمه، بدون اغراق.\n\nStyle and tone requirements:\n- Formal yet approachable and modern (مناسب کانال خبری تلگرامی حرفه‌ای)\n- Neutral, informational — no personal opinions, no exaggeration, no moral judgment\n- Emojis are allowed **only in the title (یکی) and at the start of each bullet** — nowhere else\n- Use clean Markdown formatting, RTL-friendly\n- Clearly separate Title and Body (با یک خط خالی یا --- اگر لازم بود)\n\nConstraints:\n- Do not invent facts, causes, or outcomes\n- Do not add analysis beyond what is supported by the text\n- If information is missing or unclear, omit it rather than guessing\n- Do not mention the source, scraping process, or meta-commentary\n- Use natural, commonly used Persian tech terms (مثل دیجیاتو، زومیت، ورج فارسی)\n\nThe final output should feel like a polished, quick-to-read Persian tech news brief — جذاب، حرفه‌ای و آسان برای اسکرول در تلگرام."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.8,
+      "position": [
+        352,
+        32
+      ],
+      "id": "e62fef53-e109-4a8b-a83f-21ff030ba250",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "jsCode": "// فرض: ورودی یک آیتم است که خروجی LLM داخل فیلد \"text\" قرار دارد\nconst item = $input.first().json;\n\nif (!item || !item.text) {\n  // اگر چیزی نبود، آیتم را بدون تغییر برگردان (یا error handling دلخواه)\n  return item;\n}\n\nconst fullText = item.text.trim();\n\n// پیدا کردن اولین دو خط خالی (معمولاً جداکننده تیتر و بدنه)\nconst doubleNewlineIndex = fullText.indexOf('\\n\\n');\n\nif (doubleNewlineIndex === -1) {\n  // اگر جدا نشد → فرض می‌کنیم کل متن تیتر است یا خطا → بدنه خالی\n  item.title = fullText;\n  item.body = '';\n} else {\n  item.title = fullText.substring(0, doubleNewlineIndex).trim();\n  item.body = fullText.substring(doubleNewlineIndex + 2).trim();\n}\n\n// حالا تیتر را آماده بولد کردن کنیم (برای MarkdownV2)\nitem.boldTitle = `**${item.title.replace(/\\*/g, '\\\\*')}**`;  \n// نکته مهم: ستاره‌های داخل تیتر را escape می‌کنیم تا MarkdownV2 خراب نشود\n\n// خروجی را به شکل دلخواه تنظیم کن (می‌تونی فیلدهای بیشتری اضافه کنی)\nreturn {\n  json: {\n    title: item.title,\n    boldTitle: item.boldTitle,\n    body: item.body,\n    // اگر هنوز Cover داری از نود قبلی:\n    Cover: item.Cover || null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        64
+      ],
+      "id": "c0b384f8-91b4-4458-a0b9-c9cc365ddfe3",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "content": "## TechCrunch Persian summarized news using Ai\nStay updated with latest tech news from TechCrunch!\n\n**How to Setup:**\n1. input your bot credential and your channel/pv telegram id \n2. input your Groq's Api (if you wanna use another Ai api service change the model in llm chain) \n3. Enjoy being Update on tech!\n\n**Developer: Saeed Khorsandi**\n[Linkedin](https://www.linkedin.com/in/saeedkhorsandi0) | [Telegram](https://t.me/saeedkhorsandi5)",
+        "height": 320,
+        "width": 448,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1104,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "97aae43d-80aa-47c8-9539-5b5e8ca6ecb9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Rss trigger using official TechCrunch Rss feed\n",
+        "height": 224,
+        "width": 224,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        0
+      ],
+      "id": "e3a4879f-3e1d-4ee1-a7fe-b2facaea9acd",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Scraping the news \n\n",
+        "height": 224,
+        "width": 656,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        0
+      ],
+      "id": "0db54135-47b4-4b8e-a930-869728470c08",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Translating and Summarizing using groq api\n\n",
+        "height": 368,
+        "width": 368,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        288,
+        -32
+      ],
+      "id": "1c8a7898-66e6-4478-aa7c-72d8a43a9c62",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Sending it to Telegram\n",
+        "height": 224,
+        "width": 448,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        16
+      ],
+      "id": "64869401-911d-45e8-b2cc-296a5f6b4e40",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Feed Trigger": {
+      "main": [
+        [
+          {
+            "node": "News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "49ae19c8-24de-4f00-82d9-71a4f6a0d26f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ca79995c80014e28b19df5474a7bbd990ef38393d7d5543052c576b0912e4304"
+  },
+  "id": "2rxQJQyfSGt5HpJV",
+  "tags": []
+}
