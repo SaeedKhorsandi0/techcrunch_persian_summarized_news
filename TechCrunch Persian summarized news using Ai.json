@@ -85,7 +85,6 @@
     {
       "parameters": {
         "operation": "sendPhoto",
-        "chatId": "-1003773345715",
         "file": "={{ $('Code in JavaScript').item.json.Cover }}",
         "additionalFields": {
           "caption": "=*{{ $json.title }}*\n\n{{ $json.body }}\n🔗 [لینک خبر]({{ $('RSS Feed Trigger').item.json.link }})",
@@ -343,7 +342,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "49ae19c8-24de-4f00-82d9-71a4f6a0d26f",
+  "versionId": "d9a41164-d791-43e3-bf3a-3f4f172866cc",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ca79995c80014e28b19df5474a7bbd990ef38393d7d5543052c576b0912e4304"
