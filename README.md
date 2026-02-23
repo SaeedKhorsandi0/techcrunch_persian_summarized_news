@@ -1,2 +1,56 @@
-# techcrunch_persian_summarized_news
-Automated TechCrunch news summarizer. Fetches latest tech news via RSS, summarizes articles in Persian using AI (Groq/Kimi), and sends formatted updates to Telegram.
+# 📰 TechCrunch Persian Summarizer (AI-Powered)
+
+یک ورک‌فلو هوشمند برای n8n که اخبار وب‌سایت **TechCrunch** را به محض انتشار دریافت کرده، متن کامل مقاله را استخراج می‌کند و با استفاده از هوش مصنوعی، یک خلاصه مفید و جذاب به زبان فارسی تهیه و به همراه تصویر در تلگرام ارسال می‌کند.
+
+![n8n](https://img.shields.io/badge/n8n-Workflow-orange?style=for-the-badge&logo=n8n)
+![AI](https://img.shields.io/badge/AI-Summarization-blue?style=for-the-badge&logo=openai)
+![TechCrunch](https://img.shields.io/badge/News-TechCrunch-green?style=for-the-badge&logo=techcrunch)
+
+## ✨ قابلیت‌های اصلی
+
+* **پایش خودکار RSS:** بررسی لحظه‌ای فید اخبار TechCrunch برای شناسایی مقالات جدید.
+* **استخراج کامل محتوا:** برخلاف اکثر بات‌ها، این ورک‌فلو محتوای کامل مقاله را برای پردازش دقیق از سایت استخراج می‌کند.
+* **تلخیص با هوش مصنوعی:** استفاده از قدرت LLMها (مثل Groq) برای خلاصه‌سازی اخبار تکنولوژی به زبان فارسی سلیس.
+* **ارسال به تلگرام:** ارسال تصویر اصلی خبر به همراه خلاصه و لینک منبع در قالب یک پیام شیک.
+
+## 📸 پیش‌نمایش خروجی
+
+<div align="center">
+  <table border="0">
+    <tr>
+      <td>
+        <p align="center"><b>خلاصه خبر در تلگرام</b></p>
+        <img src="https://github.com/SaeedKhorsandi0/techcrunch_persian_summarized_news/blob/main/screenshots/Screenshot_20260223_223604.jpg" width="350" alt="News Screenshot 1">
+      </td>
+      <td>
+        <p align="center"><b>نمونه تصویر و متن</b></p>
+        <img src="https://github.com/SaeedKhorsandi0/techcrunch_persian_summarized_news/blob/main/screenshots/Screenshot_20260223_223541.jpg" width="350" alt="News Screenshot 2">
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🛠 نحوه نصب و راه‌اندازی
+
+1.  فایل `TechCrunch_Persian_summarized_news_using_Ai.json` را دانلود کنید.
+2.  در محیط n8n، گزینه **Import from File** را بزنید و فایل را انتخاب کنید.
+3.  **تنظیمات دسترسی (Credentials):**
+    * **Telegram Api:** توکن بات خود را در نود "Send a photo message" تنظیم کنید.
+    * **Groq Chat Model:** کلید API خود را برای نود AI وارد کنید.
+4.  ورک‌فلو را **Activate** کنید. (به صورت پیش‌فرض هر ۱ ساعت یکبار چک می‌کند).
+
+## ⚙️ جزئیات فنی ورک‌فلو
+
+* **RSS Feed Trigger:** نقطه شروع ورک‌فلو برای دریافت لینک اخبار.
+* **HTTP Request:** دریافت سورس کد صفحه خبر برای دسترسی به متن کامل.
+* **HTML Node:** جداسازی محتوای اصلی مقاله از تگ‌های اضافه سایت.
+* **LLM Chain:** پردازش متن و ترجمه/خلاصه‌سازی هوشمند به فارسی.
+
+## ⚖️ لایسنس
+این پروژه تحت لایسنس **MIT** منتشر شده است.
+
+---
+**توسعه‌دهنده: سعید خرسندی**
+[Linkedin](https://www.linkedin.com/in/saeedkhorsandi0)
