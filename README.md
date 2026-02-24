@@ -13,7 +13,7 @@
 * **تلخیص با هوش مصنوعی:** استفاده از قدرت LLMها (مثل Groq) برای خلاصه‌سازی اخبار تکنولوژی به زبان فارسی سلیس.
 * **ارسال به تلگرام:** ارسال تصویر اصلی خبر به همراه خلاصه و لینک منبع در قالب یک پیام شیک.
 
-<img src="https://github.com/SaeedKhorsandi0/techcrunch_persian_summarized_news/blob/main/TechCrunch%20Persian%20summarized%20news%20using%20Ai.json">
+<img src="https://github.com/SaeedKhorsandi0/techcrunch_persian_summarized_news/blob/main/screenshots/Screenshot%202026-02-24%20at%2015-36-19%20%E2%96%B6%EF%B8%8F%20TechCrunch%20Persian%20summarized%20news%20using%20Ai%20-%20n8n.png">
 
 ## 📸 پیش‌نمایش خروجی
 
